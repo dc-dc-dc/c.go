@@ -92,7 +92,7 @@ func main() {
 
 	if *output {
 		fmt.Print("output to file\n")
-		f, err := os.Create("out.py")
+		f, err := os.Create("out/main.py")
 		if err != nil {
 			panic(err)
 		}
