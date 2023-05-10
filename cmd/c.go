@@ -55,11 +55,11 @@ func main() {
 	fmap := map[string]*cgo.Func{}
 	lexer := cgo.NewLexer(filePath, string(res))
 	ffunc := cgo.ParseFunction(lexer)
-	exporter := exporter.NewPythonExporter()
 	for ffunc != nil {
 		fmap[ffunc.Name] = ffunc
 		ffunc = cgo.ParseFunction(lexer)
 	}
+	exporter := exporter.NewPythonExporter(fmap)
 	for _, ffunc := range fmap {
 		exporter.Export(ffunc, w)
 	}

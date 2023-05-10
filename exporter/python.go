@@ -9,10 +9,13 @@ import (
 )
 
 type PythonExporter struct {
+	fmap map[string]*cgo.Func
 }
 
-func NewPythonExporter() *PythonExporter {
-	return &PythonExporter{}
+func NewPythonExporter(fmap map[string]*cgo.Func) *PythonExporter {
+	return &PythonExporter{
+		fmap: fmap,
+	}
 }
 
 func literalToPy(v interface{}) string {
@@ -42,20 +45,33 @@ func (e *PythonExporter) Export(ffunc *cgo.Func, w io.Writer) {
 			}
 		case *cgo.FuncCallStmt:
 			{
-				frmt := s.Args[0].Value.(string)
-				if len(s.Args) > 1 {
-					subs := " % ("
-					for _, arg := range s.Args[1:] {
-						subs += literalToPy(arg.Value) + ", "
+				if s.Name == "printf" {
+					frmt := s.Args[0].Value.(string)
+					if len(s.Args) > 1 {
+						subs := " % ("
+						for _, arg := range s.Args[1:] {
+							subs += literalToPy(arg.Value) + ", "
+						}
+						subs += ")"
+						fmt.Fprintf(w, "\tprint(%s%s)\n", literalToPy(frmt), subs)
+						break
 					}
-					subs += ")"
-					fmt.Fprintf(w, "\tprint(%s%s)\n", literalToPy(frmt), subs)
-					break
+					if strings.HasSuffix(frmt, "\\n") {
+						frmt = string(frmt[:len(frmt)-2])
+					}
+					fmt.Fprintf(w, "\tprint(%s)\n", literalToPy(frmt))
 				}
-				if strings.HasSuffix(frmt, "\\n") {
-					frmt = string(frmt[:len(frmt)-2])
+				if f, ok := e.fmap[s.Name]; ok {
+					if len(f.Args) != len(s.Args) {
+						fmt.Printf("function %s expects %d arguments, but %d were provided\n", s.Name, len(f.Args), len(s.Args))
+						break
+					}
+					fmt.Fprintf(w, "\t%s(", s.Name)
+					for _, arg := range s.Args {
+						fmt.Fprintf(w, "%s, ", literalToPy(arg.Value))
+					}
+					fmt.Fprint(w, ")\n")
 				}
-				fmt.Fprintf(w, "\tprint(%s)\n", literalToPy(frmt))
 			}
 		}
 	}

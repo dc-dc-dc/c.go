@@ -24,13 +24,13 @@ func (s *ReturnStmt) String() string {
 }
 
 type FuncCallStmt struct {
-	name string
+	Name string
 	Args []*Token
 }
 
 func NewFuncCallStmt(name string, args []*Token) Stmt {
 	return &FuncCallStmt{
-		name: name,
+		Name: name,
 		Args: args,
 	}
 }
@@ -40,7 +40,7 @@ func (s *FuncCallStmt) String() string {
 	for i, arg := range s.Args {
 		sargs[i] = arg.String()
 	}
-	return fmt.Sprintf("%s(%v)", s.name, strings.Join(sargs, ","))
+	return fmt.Sprintf("%s(%v)", s.Name, strings.Join(sargs, ","))
 }
 
 type Func struct {
