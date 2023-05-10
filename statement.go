@@ -10,17 +10,17 @@ type Stmt interface {
 }
 
 type ReturnStmt struct {
-	value interface{}
+	Value interface{}
 }
 
 func NewReturnStmt(value interface{}) Stmt {
 	return &ReturnStmt{
-		value: value,
+		Value: value,
 	}
 }
 
 func (s *ReturnStmt) String() string {
-	return fmt.Sprintf("return %v", s.value)
+	return fmt.Sprintf("return %v", s.Value)
 }
 
 type FuncCallStmt struct {

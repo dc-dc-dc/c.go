@@ -30,11 +30,21 @@ func literalToPy(v interface{}) string {
 func genOutput(ffunc *cgo.Func, w io.Writer) {
 	isEntryPoint := ffunc.Name.Value == "main" && ffunc.Type == cgo.TypeInt
 	fmt.Printf("printing function name: %s, returns: %s, args: %v, entry: %t\n", ffunc.Name.Value, ffunc.Type, ffunc.Args, isEntryPoint)
-
+	if isEntryPoint {
+		fmt.Fprintf(w, "if __name__ == \"__main__\":\n")
+	} else {
+		fmt.Fprintf(w, "def %s(", ffunc.Name.Value)
+		for _, arg := range ffunc.Args {
+			fmt.Fprintf(w, "%s, ", arg.Name)
+		}
+		fmt.Fprint(w, "):\n")
+	}
 	for _, s := range ffunc.Body {
 		switch s := s.(type) {
 		case *cgo.ReturnStmt:
-			// TODO: Add return
+			if !isEntryPoint {
+				fmt.Fprintf(w, "\treturn %s\n", literalToPy(s.Value))
+			}
 			break
 		case *cgo.FuncCallStmt:
 			{
@@ -45,13 +55,13 @@ func genOutput(ffunc *cgo.Func, w io.Writer) {
 						subs += literalToPy(arg.Value) + ", "
 					}
 					subs += ")"
-					fmt.Fprintf(w, "print(%s%s)\n", literalToPy(frmt), subs)
+					fmt.Fprintf(w, "\tprint(%s%s)\n", literalToPy(frmt), subs)
 					break
 				}
 				if strings.HasSuffix(frmt, "\\n") {
 					frmt = string(frmt[:len(frmt)-2])
 				}
-				fmt.Fprintf(w, "print(%s)\n", literalToPy(frmt))
+				fmt.Fprintf(w, "\tprint(%s)\n", literalToPy(frmt))
 			}
 		}
 	}
@@ -78,8 +88,6 @@ func main() {
 		fmt.Printf("error: failed to read file, err: %s", err.Error())
 		os.Exit(1)
 	}
-	// fmt.Print(string(res))
-	fmt.Printf("%+v\n", *output)
 	var w io.Writer = os.Stdout
 
 	if *output {
