@@ -163,19 +163,23 @@ func ParseFunction(lexer *Lexer) *Func {
 	if lexer.IsEmpty() {
 		return nil
 	}
+
+	// return type of the function
 	ttype := ParseType(lexer)
 	if ttype == TypeInvalid {
 		return nil
 	}
-
+	// name of the function
 	name := ExpectToken(lexer, TokenName)
 	if name == nil {
 		return nil
 	}
 
+	// Get the args list from the function def
 	args := ParseFuncArgList(lexer)
 
+	// The body of statements
 	body := ParseBlock(lexer)
 
-	return NewFunc(ttype, name, args, body)
+	return NewFunc(ttype, name.Value.(string), args, body)
 }

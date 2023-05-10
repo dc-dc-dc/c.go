@@ -45,12 +45,12 @@ func (s *FuncCallStmt) String() string {
 
 type Func struct {
 	Type Type
-	Name *Token
+	Name string
 	Args []Arg
 	Body []Stmt
 }
 
-func NewFunc(ttype Type, name *Token, args []Arg, body []Stmt) *Func {
+func NewFunc(ttype Type, name string, args []Arg, body []Stmt) *Func {
 	return &Func{
 		Type: ttype,
 		Name: name,
